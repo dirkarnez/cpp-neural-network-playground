@@ -1,0 +1,71 @@
+name: cpp-cmake-mingw-prebuilt-release-actions-workflow
+on:
+  push:
+    # Sequence of patterns matched against refs/tags
+    tags:
+      - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
+      - 'c*'
+      
+jobs:
+  build:
+    name: Create Release
+    runs-on: windows-latest
+    env:
+      libraryName: OpenCL-SDK
+      cmakeInstallationPath: OpenCL-SDK-installation
+      tagName: v2023.02.06
+      mingwTargetZip: OpenCL-SDK-${{ github.ref_name }}-winlibs-x86_64-posix-seh-gcc-12.2.0-mingw-w64ucrt-10.0.0-r4.zip
+    steps:
+        - uses: actions/checkout@v3
+            
+        - name: curl cmake-3.22.2-windows-x86_64.zip
+          shell: cmd
+          run: |
+            curl https://github.com/Kitware/CMake/releases/download/v3.22.2/cmake-3.22.2-windows-x86_64.zip -L --output cmake-3.22.2-windows-x86_64.zip &&^
+            dir &&^
+            7z.exe x cmake-3.22.2-windows-x86_64.zip
+          
+        - name: curl x86_64-8.1.0-release-posix-seh-rt_v6-rev0.7z
+          shell: cmd
+          run: |
+            curl https://github.com/2641797006/c/blob/master/GCC-zip/x86_64-8.1.0-release-posix-seh-rt_v6-rev0.7z?raw=true -L --output x86_64-8.1.0-release-posix-seh-rt_v6-rev0.7z &&^
+            dir &&^
+            7z.exe x x86_64-8.1.0-release-posix-seh-rt_v6-rev0.7z
+
+        - name: curl sfml
+          shell: cmd
+          run: |
+            curl https://github.com/dirkarnez/sfml-prebuilt/releases/download/v2.5.1/SFML-v2.5.1-x86_64-posix-seh-rev0-8.1.0.zip -L -O -J &&^
+            7z.exe x SFML-v2.5.1-x86_64-posix-seh-rev0-8.1.0.zip -o"SFML-v2.5.1-x86_64-posix-seh-rev0-8.1.0"
+          
+        - name: set PATH, check mingw version, cmake generate, build and install
+          shell: cmd
+          run: |
+            set PATH=^
+            ${{ github.workspace }}\mingw64;^
+            ${{ github.workspace }}\mingw64\bin;^
+            ${{ github.workspace }}\cmake-3.22.2-windows-x86_64\bin;^
+            C:\Windows\System32;
+            set CD_LINUX=%CD:\=/%
+            gcc --version &&^
+            cmake.exe -G "MinGW Makefiles" ^
+            -DCMAKE_BUILD_TYPE=Release ^
+            -DSFML_DIR="%CD_LINUX%/SFML-v2.5.1-x86_64-posix-seh-rev0-8.1.0/lib/cmake/SFML" ^
+            -B./cmake-build &&^
+            cd cmake-build &&^
+            cmake --build .
+            
+        - name: Archive Release
+          uses: thedoctor0/zip-release@master
+          with:
+            type: 'zip'
+            path: "cpp-neural-network-playground.exe,resources/"
+            directory: "cmake-build"
+            filename: "${{ env.mingwTargetZip }}"
+
+        - name: Release prebuilt
+          uses: ncipollo/release-action@v1
+          with:
+            artifacts: "cmake-build/${{ env.mingwTargetZip }}"
+            allowUpdates: true
+            token: ${{ secrets.GITHUB_TOKEN }}
