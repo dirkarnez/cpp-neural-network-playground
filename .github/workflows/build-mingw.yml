@@ -53,13 +53,16 @@ jobs:
             -DSFML_DIR="%CD_LINUX%/SFML-v2.5.1-x86_64-posix-seh-rev0-8.1.0/lib/cmake/SFML" ^
             -B./cmake-build &&^
             cd cmake-build &&^
-            cmake --build .
+            cmake --build . &&^
+            dir /s
             
         - name: Archive Release
           uses: thedoctor0/zip-release@master
           with:
             type: 'zip'
-            path: "cpp-neural-network-playground.exe,resources/"
+            path: 
+              cpp-neural-network-playground.exe
+              resources
             directory: "cmake-build"
             filename: "${{ env.mingwTargetZip }}"
 
