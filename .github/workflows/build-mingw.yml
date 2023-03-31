@@ -11,13 +11,10 @@ jobs:
     name: Create Release
     runs-on: windows-latest
     env:
-      libraryName: OpenCL-SDK
-      cmakeInstallationPath: OpenCL-SDK-installation
-      tagName: v2023.02.06
-      mingwTargetZip: OpenCL-SDK-${{ github.ref_name }}-winlibs-x86_64-posix-seh-gcc-12.2.0-mingw-w64ucrt-10.0.0-r4.zip
+      mingwTargetZip: cpp-neural-network-playground-${{ github.ref_name }}-mingw64-x86_64-posix-seh-rev0-8.1.0.zip
     steps:
         - uses: actions/checkout@v3
-            
+        
         - name: curl cmake-3.22.2-windows-x86_64.zip
           shell: cmd
           run: |
